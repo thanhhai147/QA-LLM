@@ -1,5 +1,194 @@
 from rest_framework.response import Response
-from django.http import FileResponse
 from rest_framework.generics import GenericAPIView
 from rest_framework import status
-from datetime import datetime
+from ..models.user import User
+from ..validators.custom_validators import AdancedValidator
+
+class SignupAPIView(GenericAPIView):
+    def post(self, request):
+        data = request.data
+        try:
+            user_name = data['user_name']
+            password = data['password']
+        except:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Thông tin người dùng không hợp lệ"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not user_name or not AdancedValidator.check_user_name(user_name):
+            return Response(
+                {
+                    "success": False,
+                    "message": "Tên người dùng không hợp lệ"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not password or not AdancedValidator.check_password(password):
+            return Response(
+                {
+                    "success": False,
+                    "message": "Mật khẩu không hợp lệ"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            instance = User.objects.get(user_name=user_name)
+        except User.DoesNotExist:
+            instance = None
+
+        if instance:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Tên người dùng đã tồn tại"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            instance = User(user_name=user_name, password=password)
+            instance.save()
+        except:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Lỗi Database"
+                }, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+        return Response(
+            {
+                "success": True,
+                "message": "Tạo thành công người dùng mới",
+                "data": {
+                    "user_id": instance.user_id,
+                    "user_name": instance.user_name
+                }
+            }, 
+            status=status.HTTP_200_OK
+        )
+
+class LoginAPIView(GenericAPIView):
+    def post(self, request):
+        data = request.data
+        try:
+            user_name = data['user_name']
+            password = data['password']
+        except:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Thông tin người dùng không hợp lệ"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not user_name or not AdancedValidator.check_user_name(user_name):
+            return Response(
+                {
+                    "success": False,
+                    "message": "Tên người dùng không hợp lệ"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not password or not AdancedValidator.check_password(password):
+            return Response(
+                {
+                    "success": False,
+                    "message": "Mật khẩu không hợp lệ"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            instance = User.objects.get(user_name=user_name)
+        except User.DoesNotExist:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Người dùng không tồn tại"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Lỗi Database"
+                }, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+        if instance.password != password:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Mật khẩu không hợp lệ"
+                }, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        return Response(
+            {
+                "success": True,
+                "message": "Đăng nhập thành công",
+                "data": {
+                    "user_id": instance.user_id,
+                    "user_name": instance.user_name
+                }
+            }, 
+            status=status.HTTP_200_OK
+        )
+    
+class LogoutAPIView(GenericAPIView):
+    def post(self, request):
+        data = request.data
+        try:
+            user_id = data['user_id']
+        except:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Thông tin người dùng không hợp lệ"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not user_id:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Mã người dùng không hợp lệ"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            instance = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Người dùng không tồn tại"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Lỗi Database"
+                }, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+        return Response(
+            {
+                "success": True,
+                "message": "Đăng xuất thành công"
+            }, 
+            status=status.HTTP_200_OK
+        )
