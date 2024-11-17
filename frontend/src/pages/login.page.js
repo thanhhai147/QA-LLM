@@ -13,7 +13,7 @@ const LoginPage = () => {
         </div>
         <div className="nav-button">
           <button className="btn white-btn" id="loginBtn">
-            Sign Up
+            Login
           </button>
           <button
             className="btn"
@@ -40,7 +40,7 @@ const LoginPage = () => {
             <input
               type="text"
               className="input-field"
-              placeholder="Username or Email"
+              placeholder="Username"
             />
             <i className="bx bx-user"></i>
           </div>

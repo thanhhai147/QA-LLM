@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react
 import PrivateRoute from './utils/privateRoute.util.js'
 import { AuthProvider } from './context/authentication.context.js';
 
-import UserPage from './pages/user.page.js'
 import ChatPage from './pages/chat.page.js'
 import LoginPage from './pages/login.page.js'
 import SignupPage from './pages/signup.page.js'
@@ -15,14 +14,6 @@ function App() {
         <Routes>
           <Route path='/login' element={ <LoginPage/> } />
           <Route path='/signup' element={ <SignupPage/> } />
-          <Route 
-            path='/user'
-            element={
-              <PrivateRoute>
-                <UserPage />
-              </PrivateRoute>
-            }
-          />
           <Route 
             path='/chat'
             element={

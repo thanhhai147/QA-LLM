@@ -36,26 +36,8 @@ const SignupPage = () => {
             </span>
             <header>SIGN UP</header>
           </div>
-          <div className="two-forms">
-            <div className="input-box">
-              <input
-                type="text"
-                className="input-field"
-                placeholder="Firstname"
-              />
-              <i className="bx bx-user"></i>
-            </div>
-            <div className="input-box">
-              <input
-                type="text"
-                className="input-field"
-                placeholder="Lastname"
-              />
-              <i className="bx bx-user"></i>
-            </div>
-          </div>
           <div className="input-box">
-            <input type="text" className="input-field" placeholder="Email" />
+            <input type="text" className="input-field" placeholder="Username" />
             <i className="bx bx-envelope"></i>
           </div>
           <div className="input-box">
