@@ -13,6 +13,8 @@ export default function ChatPage() {
     const [isFirstMessageSent, setIsFirstMessageSent] = useState(false);
     const [editingTitle, setEditingTitle] = useState(null);
     const [newTitle, setNewTitle] = useState("");
+    const [model, setModel] = useState(null)
+    const [prompt, setPrompt] = useState(null)
 
     const [username] = useState("AnYeuAnh"); // Tên người dùng mẫu
 
@@ -105,30 +107,30 @@ export default function ChatPage() {
 
     const modelMenu = (
         <Menu>
-            <Menu.Item key="1" danger>
+            <Menu.Item key="1" primary onClick={() => setModel('Mô hình 1')}>
                 Mô hình 1
             </Menu.Item>
-            <Menu.Item key="2" danger>
+            <Menu.Item key="2" primary onClick={() => setModel('Mô hình 2')}>
                 Mô hình 2
             </Menu.Item>
-            <Menu.Item key="3" danger>
+            <Menu.Item key="3" primary onClick={() => setModel('Mô hình 3')}>
                 Mô hình 3
             </Menu.Item>
         </Menu>
     );
     const promptingMenu = (
         <Menu>
-            <Menu.Item key="1" danger>
-                Cách 1
+            <Menu.Item key="1" primary onClick={() => setPrompt('Zero Shot')}>
+                Zero Shot
             </Menu.Item>
-            <Menu.Item key="2" danger>
-                Cách 2
+            <Menu.Item key="2" primary onClick={() => setPrompt('One Shot')}>
+                One Shot
             </Menu.Item>
-            <Menu.Item key="3" danger>
-                Cách 3
+            <Menu.Item key="3" primary onClick={() => setPrompt('Few Shot')}>
+                Few Shot
             </Menu.Item>
-            <Menu.Item key="3" danger>
-                Cách 4
+            <Menu.Item key="3" primary onClick={() => setPrompt('Chain-of-thoughts')}>
+                Chain-of-thoughts
             </Menu.Item>
         </Menu>
     );
@@ -203,14 +205,16 @@ export default function ChatPage() {
                     </div>
 
                     <div className="header-center">
-                        <Dropdown overlay={modelMenu}>
+                        <Dropdown 
+                            overlay={modelMenu}
+                        >
                             <Button className="select-model">
-                                {"Chọn mô hình"} <DownOutlined />
+                                {model ? model : "Chọn mô hình"} <DownOutlined />
                             </Button>
                         </Dropdown>
                         <Dropdown overlay={promptingMenu}>
                             <Button className="select-prompting">
-                                {"Chọn đi nè"} <DownOutlined />
+                                {prompt ? prompt : "Chọn cách prompting"} <DownOutlined />
                             </Button>
                         </Dropdown>
                     </div>
