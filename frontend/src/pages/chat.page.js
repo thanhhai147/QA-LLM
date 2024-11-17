@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button, Input, Menu, Dropdown, Popconfirm } from "antd";
-import { MenuOutlined, UserOutlined, DownOutlined, MinusCircleOutlined, EditOutlined , FormOutlined} from "@ant-design/icons";
+import { MenuOutlined, UserOutlined, DownOutlined, MinusCircleOutlined, EditOutlined, FormOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
 import "../assets/css/ChatPage.css";
@@ -14,17 +14,16 @@ export default function ChatPage() {
     const [editingTitle, setEditingTitle] = useState(null);
     const [newTitle, setNewTitle] = useState("");
 
-    const [username] = useState("AnYeuAnh"); // Sample username
+    const [username] = useState("AnYeuAnh"); // Tên người dùng mẫu
 
-    // Create a new chat when the component is mounted
     useEffect(() => {
         handleNewChat();
     }, []);
 
     const handleNewChat = () => {
-        const newChat = { title: `Chat ${chatHistory.length + 1}`, messages: [] };
+        const newChat = { title: `Trò chuyện ${chatHistory.length + 1}`, messages: [] };
         setChatHistory([...chatHistory, newChat]);
-        setCurrentChatIndex(chatHistory.length); // Switch to the new chat
+        setCurrentChatIndex(chatHistory.length); // Chuyển sang cuộc trò chuyện mới
         setIsFirstMessageSent(false);
     };
 
@@ -34,23 +33,20 @@ export default function ChatPage() {
                 handleNewChat();
             }
 
-            // Check if the currentChatIndex is valid before modifying messages
             if (currentChatIndex !== null && chatHistory[currentChatIndex]) {
                 const updatedChatHistory = [...chatHistory];
                 updatedChatHistory[currentChatIndex].messages.push(currentMessage);
                 setChatHistory(updatedChatHistory);
                 setCurrentMessage("");
-                setIsFirstMessageSent(true); // Mark that the first message has been sent
+                setIsFirstMessageSent(true);
             }
         }
     };
 
     const handleKeyDown = (e) => {
-        // Allow line breaks with Shift + Enter
         if (e.key === "Enter" && e.shiftKey) {
             setCurrentMessage(currentMessage + "\n");
         } else if (e.key === "Enter") {
-            // Send message on normal Enter key press
             handleSendMessage();
         }
     };
@@ -60,18 +56,16 @@ export default function ChatPage() {
     };
 
     const deleteChat = (index) => {
-        // If the current chat is being deleted, create a new chat
         if (currentChatIndex === index) {
             handleNewChat();
         }
 
         const updatedChatHistory = chatHistory.filter((_, i) => i !== index);
 
-        // Update currentChatIndex after deletion
         if (updatedChatHistory.length > 0) {
-            setCurrentChatIndex(0); // Select the first chat if any are left
+            setCurrentChatIndex(0);
         } else {
-            setCurrentChatIndex(null); // Reset currentChatIndex if no chats are left
+            setCurrentChatIndex(null);
         }
 
         setChatHistory(updatedChatHistory);
@@ -95,7 +89,7 @@ export default function ChatPage() {
     const accountMenu = (
         <Menu>
             <Menu.Item key="1">
-                Account: <strong>{username}</strong>
+                Tài khoản: <strong>{username}</strong>
             </Menu.Item>
             <Menu.Item
                 key="2"
@@ -104,45 +98,43 @@ export default function ChatPage() {
                     navigate("/login");
                 }}
             >
-                Log Out
+                Đăng xuất
             </Menu.Item>
         </Menu>
     );
 
     const modelMenu = (
         <Menu>
-            <Menu.Item
-                key="1"
-                danger
-                onClick={() => {
-                    navigate("##");
-                }}
-            >
-                Model 1
-            </Menu.Item><Menu.Item
-                key="2"
-                danger
-                onClick={() => {
-                    navigate("####");
-                }}
-            >
-                Model 2
+            <Menu.Item key="1" danger>
+                Mô hình 1
             </Menu.Item>
-            <Menu.Item
-                key="3"
-                danger
-                onClick={() => {
-                    navigate("######");
-                }}
-            >
-                Model 3
+            <Menu.Item key="2" danger>
+                Mô hình 2
+            </Menu.Item>
+            <Menu.Item key="3" danger>
+                Mô hình 3
+            </Menu.Item>
+        </Menu>
+    );
+    const promptingMenu = (
+        <Menu>
+            <Menu.Item key="1" danger>
+                Cách 1
+            </Menu.Item>
+            <Menu.Item key="2" danger>
+                Cách 2
+            </Menu.Item>
+            <Menu.Item key="3" danger>
+                Cách 3
+            </Menu.Item>
+            <Menu.Item key="3" danger>
+                Cách 4
             </Menu.Item>
         </Menu>
     );
 
     useEffect(() => {
         const handleResize = () => {
-            // Adjust chat input position on small screens if a message has been sent
             if (window.innerWidth < 768 && isFirstMessageSent) {
                 document.querySelector(".chat-area").classList.add("with-first-message");
             } else {
@@ -150,10 +142,8 @@ export default function ChatPage() {
             }
         };
 
-        // Listen for window resize events
         window.addEventListener("resize", handleResize);
 
-        // Ensure correct state on first load
         handleResize();
 
         return () => window.removeEventListener("resize", handleResize);
@@ -161,10 +151,9 @@ export default function ChatPage() {
 
     return (
         <div className="chat-page">
-            {/* Sidebar */}
             {isSidebarVisible && (
                 <div className="sidebar">
-                    <h3>Chat History</h3>
+                    <div className="his-chat">Lịch sử trò chuyện</div>
                     <div className="chat-history">
                         {chatHistory.map((chat, index) => (
                             <div key={index} className={`chat-title ${currentChatIndex === index ? "selected" : ""}`}>
@@ -176,19 +165,16 @@ export default function ChatPage() {
                                         autoFocus
                                     />
                                 ) : (
-                                    <span
-                                        className="chat-title-text"
-                                        onClick={() => selectChat(index)}
-                                    >
+                                    <span className="chat-title-text" onClick={() => selectChat(index)}>
                                         {chat.title}
                                     </span>
                                 )}
                                 <div className="chat-actions">
                                     <Popconfirm
-                                        title="Are you sure you want to delete this chat?"
+                                        title="Bạn có chắc muốn xóa trò chuyện này?"
                                         onConfirm={() => deleteChat(index)}
-                                        okText="Delete"
-                                        cancelText="Cancel"
+                                        okText="Xóa"
+                                        cancelText="Hủy"
                                     >
                                         <Button type="link" danger><MinusCircleOutlined /></Button>
                                     </Popconfirm>
@@ -200,7 +186,6 @@ export default function ChatPage() {
                 </div>
             )}
 
-            {/* Main content */}
             <div className={`main-content ${isSidebarVisible ? "" : "no-sidebar"}`}>
                 <div className="header">
                     <div className="header-buttons">
@@ -216,17 +201,26 @@ export default function ChatPage() {
                         >
                         </Button>
                     </div>
+
+                    <div className="header-center">
+                        <Dropdown overlay={modelMenu}>
+                            <Button className="select-model">
+                                {"Chọn mô hình"} <DownOutlined />
+                            </Button>
+                        </Dropdown>
+                        <Dropdown overlay={promptingMenu}>
+                            <Button className="select-prompting">
+                                {"Chọn đi nè"} <DownOutlined />
+                            </Button>
+                        </Dropdown>
+                    </div>
+
+                        <Dropdown overlay={accountMenu}>
+                            <Button className="account-info" icon={<UserOutlined />}>
+                                {username} <DownOutlined />
+                            </Button>
+                        </Dropdown>
                     
-                    <Dropdown overlay={modelMenu}>
-                        <Button className="select-model">
-                            {"Model"} <DownOutlined />
-                        </Button>
-                    </Dropdown>
-                    <Dropdown overlay={accountMenu}>
-                        <Button className="account-info" icon={<UserOutlined />}>
-                            {username} <DownOutlined />
-                        </Button>
-                    </Dropdown>
                 </div>
 
                 <div className="chat-area">
@@ -239,17 +233,16 @@ export default function ChatPage() {
                         ))}
                 </div>
 
-                {/* Chat input area */}
                 <div className="chat-input-area">
                     <Input
                         value={currentMessage}
                         onChange={(e) => setCurrentMessage(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Type a message"
+                        placeholder="Nhập tin nhắn"
                         rows={1}
                     />
                     <Button type="primary" onClick={handleSendMessage}>
-                        Send
+                        Gửi
                     </Button>
                 </div>
             </div>

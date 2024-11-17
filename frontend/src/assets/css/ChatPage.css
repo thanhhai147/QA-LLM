@@ -9,10 +9,11 @@
 }
 
 .sidebar {
-    width: 260px;
+    font-size: 13px;
+    width: 250px;
     background: rgba(42, 122, 233, 0.326);
-    padding: 20px;
-    border-right: 1px solid rgba(42, 122, 233, 0.326);
+    padding: 8px;
+    border-right: 1px solid rgba(14, 77, 164, 0.326);
     overflow-y: auto;
     position: fixed;
     top: 0;
@@ -23,7 +24,7 @@
 .chat-history {
     max-height: 80%;
     overflow-y: auto;
-    margin-top: 20px;
+    margin-top: 30px;
 }
 
 .chat-message {
@@ -32,10 +33,25 @@
     padding: 15px;
     border-radius: 15px;
     color: #000;
-    width: 100%;
-    max-width: 600px;
+    width: auto;
+    max-width: 400px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+    /* Thêm thuộc tính này để nội dung tự động xuống dòng */
+    word-wrap: break-word; /* Đảm bảo từ dài sẽ xuống dòng */
+    word-break: break-word; /* Hỗ trợ xuống dòng cho các từ dài */
+    white-space: pre-wrap; /* Giữ nguyên khoảng trắng và xuống dòng theo nội dung */
+    margin-right: 27%;
+    margin-left: auto;
+    transition: bottom 0.3s ease, margin-left 0.3s ease;
+
 }
+.main-content.no-sidebar .chat-message {
+    margin-right: 30%;
+    margin-left: auto;
+
+}
+
 
 .main-content {
     flex: 1;
@@ -45,10 +61,6 @@
     padding: 20px;
     margin-left: 250px;
     transition: margin-left 0.3s ease;
-}
-
-.main-content.no-sidebar {
-    margin-left: 0;
 }
 
 .header {
@@ -77,16 +89,40 @@
 .chat-input-area {
     display: flex;
     gap: 10px;
-    width: 100%;
+    width: 80%;
     max-width: 600px;
+    height: auto;
     position: absolute;
     bottom: 40px;
-    left: 50%;
     transform: translateX(-50%);
-    transition: bottom 0.3s ease;
+    transition: bottom 0.3s ease, margin-left 0.3s ease;
+    margin-left:40%;
+}
+.main-content.no-sidebar .chat-input-area {
+    margin-left: 48%; 
+}
+
+.main-content.no-sidebar {
+    margin-left: 0;
 }
 
 .new-chat {
+    margin-right: 10px;
+    margin-left: 10px;
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+}
+
+.select-model {
+    margin-right: 5px;
+    margin-left: 10px;
+    margin-bottom: 5px;
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+}
+
+.select-prompting {
+    margin-right: 10px;
     margin-left: 10px;
     background-color: #ffffff;
     color: rgb(0, 0, 0);
@@ -127,23 +163,27 @@
     transition: background-color 0.3s ease;
 }
 
-/* Khi di chuột vào đoạn chat, thay đổi màu nền thành đỏ */
+
 .chat-title:hover {
-    background-color: #6fbeff; /* Màu đỏ */
+    background-color: #6fbeff; 
 }
 
-/* Đoạn chat đang được chọn, nền sẽ tối hơn */
 .chat-title.selected {
     background-color: #6fbeff; 
 }
 
 .chat-title-text {
     cursor: pointer;
-    color: inherit; /* Giữ màu chữ mặc định */
+    color: inherit; 
 
     white-space: nowrap; /* Ngăn không cho text xuống dòng */
     overflow: hidden; /* Ẩn phần text thừa */
     text-overflow: ellipsis; /* Thêm "..." nếu text quá dài */
-    max-width: 100px; /* Điều chỉnh chiều rộng tối đa theo nhu cầu */
+    max-width: 110px; /* Điều chỉnh chiều rộng tối đa theo nhu cầu */
     display: inline-block; /* Đảm bảo text hiển thị theo một dòng */
 }
+
+.his-chat {
+    font-size: 23px;
+}
+

@@ -9,18 +9,18 @@ const LoginPage = () => {
     <div className="wrapper">
       <nav className="nav">
         <div className="nav-logo">
-          <p>Welcome!</p>
+          <p>Héloooooooo!</p>
         </div>
         <div className="nav-button">
           <button className="btn white-btn" id="loginBtn">
-            Login
+            Đăng nhập
           </button>
           <button
             className="btn"
             id="registerBtn"
             onClick={() => navigate("/signup")}
           >
-            Sign Up
+            Đăng ký
           </button>
         </div>
       </nav>
@@ -29,18 +29,18 @@ const LoginPage = () => {
         <div className="login-container" id="login">
           <div className="top">
             <span>
-              Don't have an account?{" "}
+              Bạn chưa có tài khoản?{" "}
               <a href="#" onClick={() => navigate("/signup")}>
-                Sign Up
+                Đăng ký
               </a>
             </span>
-            <header>LOGIN</header>
+            <header>ĐĂNG NHẬP</header>
           </div>
           <div className="input-box">
             <input
               type="text"
               className="input-field"
-              placeholder="Username"
+              placeholder="Tên đăng nhập"
             />
             <i className="bx bx-user"></i>
           </div>
@@ -48,17 +48,17 @@ const LoginPage = () => {
             <input
               type="password"
               className="input-field"
-              placeholder="Password"
+              placeholder="Mật khẩu"
             />
             <i className="bx bx-lock-alt"></i>
           </div>
           <div className="input-box">
-            <input type="submit" className="submit" value="Sign In" />
+            <input type="submit" className="submit" value="Đăng nhập" />
           </div>
           <div className="two-col">
             <div className="one">
               <input type="checkbox" id="login-check" />
-              <label htmlFor="login-check"> Remember Me</label>
+              <label htmlFor="login-check"> Ghi nhớ đăng nhập</label>
             </div>
           </div>
         </div>

@@ -9,7 +9,7 @@ const SignupPage = () => {
     <div className="wrapper">
       <nav className="nav">
         <div className="nav-logo">
-          <p>Welcome!</p>
+          <p>Héloooooooo!</p>
         </div>
         <div className="nav-button">
           <button
@@ -17,10 +17,10 @@ const SignupPage = () => {
             id="loginBtn"
             onClick={() => navigate("/login")}
           >
-            Login
+            Đăng nhập
           </button>
           <button className="btn white-btn" id="registerBtn">
-            Sign Up
+            Đăng ký
           </button>
         </div>
       </nav>
@@ -29,27 +29,27 @@ const SignupPage = () => {
         <div className="register-container" id="register">
           <div className="top">
             <span>
-              Already have an account?{" "}
+              Đã có tài khoản?{" "}
               <a href="#" onClick={() => navigate("/login")}>
-                Login
+                Đăng nhập
               </a>
             </span>
-            <header>SIGN UP</header>
+            <header>ĐĂNG KÝ</header>
           </div>
           <div className="input-box">
-            <input type="text" className="input-field" placeholder="Username" />
+            <input type="text" className="input-field" placeholder="Tên đăng nhập" />
             <i className="bx bx-envelope"></i>
           </div>
           <div className="input-box">
             <input
               type="password"
               className="input-field"
-              placeholder="Password"
+              placeholder="Mật khẩu"
             />
             <i className="bx bx-lock-alt"></i>
           </div>
           <div className="input-box">
-            <input type="submit" className="submit" value="Register" />
+            <input type="submit" className="submit" value="Đăng ký" />
           </div>
         </div>
       </div>
