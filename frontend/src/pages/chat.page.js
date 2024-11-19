@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button, Input, Menu, Dropdown, Popconfirm } from "antd";
 import { MenuOutlined, UserOutlined, DownOutlined, MinusCircleOutlined, EditOutlined, FormOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from '../context/authentication.context';
 
 import "../assets/css/ChatPage.css";
 
@@ -16,7 +17,7 @@ export default function ChatPage() {
     const [model, setModel] = useState(null)
     const [prompt, setPrompt] = useState(null)
 
-    const [username] = useState("AnYeuAnh"); // Tên người dùng mẫu
+    const { username, logout } = useAuth();
 
     useEffect(() => {
         handleNewChat();

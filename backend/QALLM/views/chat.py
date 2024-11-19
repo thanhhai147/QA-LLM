@@ -37,7 +37,7 @@ class CreateChatAPIView(GenericAPIView):
             )
         
         try:
-            chat_position = Chat.objects.get(session_id=session_id).count() + 1
+            chat_position = Chat.objects.filter(session_id=session_id).count() + 1
         except Chat.DoesNotExist:
             chat_position = 1
         except:
@@ -48,7 +48,7 @@ class CreateChatAPIView(GenericAPIView):
                 }, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        print(chat_position)
+        
         bot_answer = ""
         try:
             session_instance = Session.objects.get(session_id=session_id)
@@ -82,7 +82,7 @@ class GetChatAPIView(GenericAPIView):
     def get(self, request):
         params = request.query_params
         try:
-            chat_id = params['chat_id']
+            session_id = params['session_id']
         except:
             return Response(
                 {
@@ -91,7 +91,7 @@ class GetChatAPIView(GenericAPIView):
                 }, 
                 status=status.HTTP_400_BAD_REQUEST
             )
-        if not chat_id:
+        if not session_id:
             return Response(
                 {
                     "success": False,
@@ -101,7 +101,7 @@ class GetChatAPIView(GenericAPIView):
             )
         
         try:
-            chat_instance = Chat.objects.get(chat_id=chat_id)
+            chat_instances = Chat.objects.filter(session_id=session_id).order_by('chat_position')
         except:
             return Response(
                 {
@@ -110,17 +110,22 @@ class GetChatAPIView(GenericAPIView):
                 }, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
+        
         return Response(
             {
                 "success": True,
                 "message": "Lấy thành công trò chuyện",
                 "data": {
-                    "chat_id": chat_instance.chat_id,
-                    "session_id": chat_instance.session_id.session_id,
-                    "chat_position": chat_instance.chat_position,
-                    "user_ask": chat_instance.user_ask,
-                    "bot_answer": chat_instance.bot_answer
+                    "chat": [
+                        {
+                            "chat_id": chat.chat_id,
+                            "session_id": chat.session_id.session_id,
+                            "chat_position": chat.chat_position,
+                            "user_ask": chat.user_ask,
+                            "bot_answer": chat.bot_answer
+                        }
+                        for chat in chat_instances.iterator()
+                    ]
                 }
             }, 
             status=status.HTTP_200_OK

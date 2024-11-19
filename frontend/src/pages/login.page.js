@@ -1,9 +1,33 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../assets/css/LoginPage.css";
+import { useAuth } from '../context/authentication.context';
+import UserAPI from "../API/user";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth()
+  const [username, setUsername] = useState(null)
+  const [password, setPassword] = useState(null)
+
+  const handleLogin = () => {
+    UserAPI.login(username, password)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        return data.data
+      } else {
+        console.log(data)
+      }
+    })
+    .then(data => {
+      login(data.user_id, data.user_name)
+      navigate("/chat")
+    })
+    .catch(e => {
+      console.log(e)
+    })
+  }
 
   return (
     <div className="wrapper">
@@ -41,6 +65,7 @@ const LoginPage = () => {
               type="text"
               className="input-field"
               placeholder="Tên đăng nhập"
+              onChange={(e) => setUsername(e.target.value)}
             />
             <i className="bx bx-user"></i>
           </div>
@@ -49,11 +74,17 @@ const LoginPage = () => {
               type="password"
               className="input-field"
               placeholder="Mật khẩu"
+              onChange={(e) => setPassword(e.target.value)}
             />
             <i className="bx bx-lock-alt"></i>
           </div>
           <div className="input-box">
-            <input type="submit" className="submit" value="Đăng nhập" />
+            <input 
+              type="submit" 
+              className="submit" 
+              value="Đăng nhập"  
+              onClick={handleLogin}
+            />
           </div>
           <div className="two-col">
             <div className="one">

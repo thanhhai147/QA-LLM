@@ -3,6 +3,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework import status
 from ..models.user import User
 from ..validators.custom_validators import AdancedValidator
+from django.utils import timezone
 
 class SignupAPIView(GenericAPIView):
     def post(self, request):
@@ -106,6 +107,19 @@ class LoginAPIView(GenericAPIView):
         
         try:
             instance = User.objects.get(user_name=user_name)
+
+            if instance.password != password:
+                return Response(
+                    {
+                        "success": False,
+                        "message": "Mật khẩu không hợp lệ"
+                    }, 
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+            instance.login_at = timezone.now()
+            instance.save()
+            
         except User.DoesNotExist:
             return Response(
                 {
@@ -123,22 +137,14 @@ class LoginAPIView(GenericAPIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
-        if instance.password != password:
-            return Response(
-                {
-                    "success": False,
-                    "message": "Mật khẩu không hợp lệ"
-                }, 
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        
         return Response(
             {
                 "success": True,
                 "message": "Đăng nhập thành công",
                 "data": {
                     "user_id": instance.user_id,
-                    "user_name": instance.user_name
+                    "user_name": instance.user_name,
+                    "login_at": instance.login_at
                 }
             }, 
             status=status.HTTP_200_OK

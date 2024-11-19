@@ -22,6 +22,14 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route 
+            path='/'
+            element={
+              <PrivateRoute>
+                <ChatPage />
+              </PrivateRoute>
+            }
+          />
         </Routes>
       </Router>
     </AuthProvider>
