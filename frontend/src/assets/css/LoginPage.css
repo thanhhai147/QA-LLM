@@ -95,11 +95,10 @@ header{
     font-size: 30px;
     text-align: center;
     padding: 10px 0 30px 0;
-}
-.input-field{
+}.input-field {
     font-size: 15px;
     background: rgba(255, 253, 253, 0.2);
-    color: #fff;
+    color: #000 !important; /* Đảm bảo màu chữ luôn là đen */
     height: 50px;
     width: 100%;
     padding: 0 10px 0 45px;
@@ -108,6 +107,12 @@ header{
     outline: none;
     transition: .2s ease;
 }
+
+/* Đảm bảo màu placeholder */
+.input-field::placeholder {
+    color: rgba(0, 0, 0, 0.5) !important;
+}
+
 .input-box i{
     position: relative;
     top: -35px;
@@ -144,4 +149,23 @@ header {
     text-align: center;
     padding: 10px 0 30px 0; 
     margin-bottom: 20px;    
+}
+.message-box {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  color: #fff;
+  z-index: 1000;
+}
+
+.message-box.success {
+  background-color: #4caf50; /* Màu xanh cho thành công */
+}
+
+.message-box.error {
+  background-color: #f44336; /* Màu đỏ cho lỗi */
 }

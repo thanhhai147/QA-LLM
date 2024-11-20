@@ -9,7 +9,7 @@ const SignupPage = () => {
     <div className="wrapper">
       <nav className="nav">
         <div className="nav-logo">
-          <p>Héloooooooo!</p>
+          <p>QA-LLM</p>
         </div>
         <div className="nav-button">
           <button

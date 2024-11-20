@@ -9,8 +9,8 @@ class UserAPI {
                     "Content-type": "application/json; charset=UTF-8"
                 },
                 body: JSON.stringify({
-                    user_name: username,
-                    password: password
+                    user_name: username || "", // Tránh null
+                    password: password || ""  // Tránh null
                 })
             }
         )

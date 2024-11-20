@@ -1,39 +1,53 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../assets/css/LoginPage.css";
-import { useAuth } from '../context/authentication.context';
+import { useAuth } from "../context/authentication.context";
 import UserAPI from "../API/user";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth()
-  const [username, setUsername] = useState(null)
-  const [password, setPassword] = useState(null)
+  const { login } = useAuth();
+  const [username, setUsername] = useState(null);
+  const [password, setPassword] = useState(null);
+  const [message, setMessage] = useState(""); // State để lưu thông báo
+  const [isSuccess, setIsSuccess] = useState(false); // State để xác định loại thông báo
 
   const handleLogin = () => {
+    console.log("Username:", username);
+    console.log("Password:", password);
+
     UserAPI.login(username, password)
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        return data.data
-      } else {
-        console.log(data)
-      }
-    })
-    .then(data => {
-      login(data.user_id, data.user_name)
-      navigate("/chat")
-    })
-    .catch(e => {
-      console.log(e)
-    })
-  }
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          login(data.data.user_id, data.data.user_name);
+          setMessage(data.message); // Hiển thị thông báo thành công
+          setIsSuccess(true);
+
+          // Sau 1,5 giây chuyển hướng đến /chat
+          setTimeout(() => {
+            setMessage(""); // Ẩn thông báo
+            navigate("/chat");
+          }, 1500);
+        } else {
+          setMessage(data.message); 
+          setTimeout(() => {
+            setMessage(""); 
+          }, 3000);
+          setIsSuccess(false);
+        }
+      })
+      .catch((e) => {
+        setMessage("Lỗi đăng nhập: " + e.message);
+        setIsSuccess(false);
+      });
+  };
 
   return (
     <div className="wrapper">
       <nav className="nav">
         <div className="nav-logo">
-          <p>Héloooooooo!</p>
+          <p>QA-LLM</p>
         </div>
         <div className="nav-button">
           <button className="btn white-btn" id="loginBtn">
@@ -79,21 +93,30 @@ const LoginPage = () => {
             <i className="bx bx-lock-alt"></i>
           </div>
           <div className="input-box">
-            <input 
-              type="submit" 
-              className="submit" 
-              value="Đăng nhập"  
+            <input
+              type="submit"
+              className="submit"
+              value="Đăng nhập"
               onClick={handleLogin}
             />
           </div>
-          <div className="two-col">
+          {/* <div className="two-col">
             <div className="one">
               <input type="checkbox" id="login-check" />
               <label htmlFor="login-check"> Ghi nhớ đăng nhập</label>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
+
+      {/* Hiển thị thông báo */}
+      {message && (
+        <div
+          className={`message-box ${isSuccess ? "success" : "error"}`}
+        >
+          {message}
+        </div>
+      )}
     </div>
   );
 };
