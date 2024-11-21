@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Button, Input, Menu, Dropdown, Popconfirm } from "antd";
+import { Button, Input, Menu, Dropdown, Popconfirm, message } from "antd";
 import { MenuOutlined, UserOutlined, DownOutlined, MinusCircleOutlined, EditOutlined, FormOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '../context/authentication.context';
+import UserAPI from "../API/user";
 
 import "../assets/css/ChatPage.css";
 
@@ -16,8 +17,12 @@ export default function ChatPage() {
     const [newTitle, setNewTitle] = useState("");
     const [model, setModel] = useState(null)
     const [prompt, setPrompt] = useState(null)
+    const [message, setMessage] = useState(""); // State để lưu thông báo
+    const [isSuccess, setIsSuccess] = useState(false); // State để xác định loại thông báo
 
-    const { username, logout } = useAuth();
+    const { username, logout , userId } = useAuth();
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         handleNewChat();
@@ -87,8 +92,29 @@ export default function ChatPage() {
         setNewTitle("");
     };
 
-    const navigate = useNavigate();
 
+    const handleLogout = () => {
+        UserAPI.logout(userId) 
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    setMessage(data.message); // Hiển thị thông báo thành công
+                    setIsSuccess(true);
+                    setTimeout(() => {
+                        setMessage(data.message); 
+                        logout() // ================
+                        navigate("/login"); 
+                    }, 1500);
+                } else {
+                    setMessage(data.message);
+                    setIsSuccess(false);
+                }
+            })
+            .catch((e) => {
+                setMessage("Lỗi: " + e.message);
+                setIsSuccess(false);
+            });
+    };
     const accountMenu = (
         <Menu>
             <Menu.Item key="1">
@@ -97,9 +123,7 @@ export default function ChatPage() {
             <Menu.Item
                 key="2"
                 danger
-                onClick={() => {
-                    navigate("/login");
-                }}
+                onClick={handleLogout} 
             >
                 Đăng xuất
             </Menu.Item>
@@ -227,6 +251,12 @@ export default function ChatPage() {
                         </Dropdown>
                     
                 </div>
+
+                {message && (
+                    <div className={`message-box ${isSuccess ? "success" : "error"}`}>
+                        {message}
+                    </div>
+                )}
 
                 <div className="chat-area">
                     {currentChatIndex !== null &&

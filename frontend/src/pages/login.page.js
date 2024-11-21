@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../assets/css/LoginPage.css";
 import { useAuth } from "../context/authentication.context";
 import UserAPI from "../API/user";
+import { useLocation } from "react-router-dom";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -11,6 +12,18 @@ const LoginPage = () => {
   const [password, setPassword] = useState(null);
   const [message, setMessage] = useState(""); // State để lưu thông báo
   const [isSuccess, setIsSuccess] = useState(false); // State để xác định loại thông báo
+
+  const location = useLocation();
+  const { message2 } = location.state || {}; // Lấy thông báo từ state
+
+  useEffect(() => {
+    if (message2) {
+      const timeout = setTimeout(() => {
+        navigate("/login", { replace: true }); // Reset message2 sau 2 giây
+      }, 2000);
+      return () => clearTimeout(timeout); // Dọn dẹp timeout
+    }
+  }, [message2, navigate]);
 
   const handleLogin = () => {
     console.log("Username:", username);
@@ -41,7 +54,7 @@ const LoginPage = () => {
         setMessage("Lỗi đăng nhập: " + e.message);
         setIsSuccess(false);
       });
-  };
+    };
 
   return (
     <div className="wrapper">
@@ -109,14 +122,19 @@ const LoginPage = () => {
         </div>
       </div>
 
-      {/* Hiển thị thông báo */}
       {message && (
-        <div
-          className={`message-box ${isSuccess ? "success" : "error"}`}
-        >
+        <div className={`message-box ${isSuccess ? "success" : "error"}`}>
           {message}
         </div>
       )}
+
+      {message2 && (
+        <div className={`message-box2 ${isSuccess ? "success" : "error"}`}>
+          {message2} {/* Hiển thị thông báo đăng nhập */}
+        </div>
+      )}
+
+
     </div>
   );
 };
