@@ -65,7 +65,8 @@ class SignupAPIView(GenericAPIView):
         return Response(
             {
                 "success": True,
-                "message": "Tạo thành công người dùng mới",
+                "message1": "Tạo thành công người dùng mới",
+                "message2": "Vui lòng đăng nhập để tiếp tục",
                 "data": {
                     "user_id": instance.user_id,
                     "user_name": instance.user_name

@@ -72,3 +72,7 @@
     margin-top: 10px;
   }
   
+  .message-box {
+    transition: opacity 0.5s ease-in-out;
+  }
+  
