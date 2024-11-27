@@ -40,21 +40,28 @@ export default function ChatPage() {
             if (chatHistory.length === 0) {
                 handleNewChat();
             }
-
+    
             if (currentChatIndex !== null && chatHistory[currentChatIndex]) {
                 const updatedChatHistory = [...chatHistory];
-                updatedChatHistory[currentChatIndex].messages.push(currentMessage);
+                const currentChat = updatedChatHistory[currentChatIndex];
+    
+                // Nếu là tin nhắn đầu tiên, cập nhật tiêu đề
+                if (!isFirstMessageSent) {
+                    currentChat.title = currentMessage.trim(); // Đặt tiêu đề bằng tin nhắn đầu tiên
+                }
+    
+                // Thêm tin nhắn vào lịch sử
+                currentChat.messages.push(currentMessage);
                 setChatHistory(updatedChatHistory);
                 setCurrentMessage("");
                 setIsFirstMessageSent(true);
             }
         }
     };
+    
 
     const handleKeyDown = (e) => {
-        if (e.key === "Enter" && e.shiftKey) {
-            setCurrentMessage(currentMessage + "\n");
-        } else if (e.key === "Enter") {
+        if (e.key === "Enter") {
             handleSendMessage();
         }
     };
@@ -182,7 +189,7 @@ export default function ChatPage() {
                 <div className="sidebar">
                     <div className="his-chat">Lịch sử trò chuyện</div>
                     <div className="chat-history">
-                        {chatHistory.map((chat, index) => (
+                        {chatHistory.mapb  ((chat, index) => (
                             <div key={index} className={`chat-title ${currentChatIndex === index ? "selected" : ""}`}>
                                 {editingTitle === index ? (
                                     <Input
