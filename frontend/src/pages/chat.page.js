@@ -4,6 +4,8 @@ import { MenuOutlined, UserOutlined, DownOutlined, MinusCircleOutlined, EditOutl
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '../context/authentication.context';
 import UserAPI from "../API/user";
+import ChatAPI from "../API/chat";
+import SessionAPI from "../API/session";
 
 import "../assets/css/ChatPage.css";
 
@@ -19,9 +21,7 @@ export default function ChatPage() {
     const [prompt, setPrompt] = useState(null)
     const [message, setMessage] = useState(""); // State để lưu thông báo
     const [isSuccess, setIsSuccess] = useState(false); // State để xác định loại thông báo
-
     const { username, logout , userId } = useAuth();
-
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -29,33 +29,68 @@ export default function ChatPage() {
     }, []);
 
     const handleNewChat = () => {
-        const newChat = { title: `Trò chuyện ${chatHistory.length + 1}`, messages: [] };
-        setChatHistory([...chatHistory, newChat]);
-        setCurrentChatIndex(chatHistory.length); // Chuyển sang cuộc trò chuyện mới
-        setIsFirstMessageSent(false);
+        SessionAPI.createSession(userId) 
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const newChat = { title: `Trò chuyện ${chatHistory.length + 1}`, messages: [], sessionId: data.data.session_id };
+                    setChatHistory([...chatHistory, newChat]);
+                    setCurrentChatIndex(chatHistory.length);
+                    setIsFirstMessageSent(false);
+                } else {
+                    message.error(data.message);
+                }
+            })
+            .catch(error => {
+                message.error("Lỗi khi tạo phiên: " + error.message);
+            });
     };
+
+    
+    const deleteChat = (index) => {
+        const currentChat = chatHistory[index];
+    
+        SessionAPI.deleteSession(currentChat.sessionId)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const updatedChatHistory = chatHistory.filter((_, i) => i !== index);
+                    setChatHistory(updatedChatHistory);
+                    if (updatedChatHistory.length > 0) {
+                        setCurrentChatIndex(0);
+                    } else {
+                        setCurrentChatIndex(null);
+                    }
+                } else {
+                    message.error(data.message); 
+                }
+            })
+            .catch(error => {
+                message.error("Lỗi khi xóa đoạn chat: " + error.message);
+            });
+    };
+
 
     const handleSendMessage = () => {
         if (currentMessage.trim()) {
-            if (chatHistory.length === 0) {
-                handleNewChat();
-            }
-    
-            if (currentChatIndex !== null && chatHistory[currentChatIndex]) {
-                const updatedChatHistory = [...chatHistory];
-                const currentChat = updatedChatHistory[currentChatIndex];
-    
-                // Nếu là tin nhắn đầu tiên, cập nhật tiêu đề
-                if (!isFirstMessageSent) {
-                    currentChat.title = currentMessage.trim(); // Đặt tiêu đề bằng tin nhắn đầu tiên
-                }
-    
-                // Thêm tin nhắn vào lịch sử
-                currentChat.messages.push(currentMessage);
-                setChatHistory(updatedChatHistory);
-                setCurrentMessage("");
-                setIsFirstMessageSent(true);
-            }
+            const currentChat = chatHistory[currentChatIndex];
+            
+            ChatAPI.createChat(currentChat.sessionId, currentMessage)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentChat.messages.push(currentMessage);
+                        currentChat.messages.push(data.data.bot_answer);
+                        setChatHistory([...chatHistory]);
+                        setCurrentMessage("");
+                        setIsFirstMessageSent(true);
+                    } else {
+                        message.error(data.message); 
+                    }
+                })
+                .catch(error => {
+                    message.error("Lỗi khi gửi tin nhắn: " + error.message);
+                });
         }
     };
     
@@ -69,23 +104,7 @@ export default function ChatPage() {
     const selectChat = (index) => {
         setCurrentChatIndex(index);
     };
-
-    const deleteChat = (index) => {
-        if (currentChatIndex === index) {
-            handleNewChat();
-        }
-
-        const updatedChatHistory = chatHistory.filter((_, i) => i !== index);
-
-        if (updatedChatHistory.length > 0) {
-            setCurrentChatIndex(0);
-        } else {
-            setCurrentChatIndex(null);
-        }
-
-        setChatHistory(updatedChatHistory);
-    };
-
+    
     const handleEditTitle = (index) => {
         setEditingTitle(index);
         setNewTitle(chatHistory[index].title);
@@ -189,7 +208,7 @@ export default function ChatPage() {
                 <div className="sidebar">
                     <div className="his-chat">Lịch sử trò chuyện</div>
                     <div className="chat-history">
-                        {chatHistory.mapb  ((chat, index) => (
+                        {chatHistory.map((chat, index) => (
                             <div key={index} className={`chat-title ${currentChatIndex === index ? "selected" : ""}`}>
                                 {editingTitle === index ? (
                                     <Input
