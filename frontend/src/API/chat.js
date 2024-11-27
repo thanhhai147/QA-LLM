@@ -25,6 +25,22 @@ class ChatAPI {
             }
         )
     }
+
+    static deleteChat(sessionId) {
+        return fetch(
+            `http://localhost:8000/delete-chat`, 
+            {
+                method: "POST",
+                mode: "cors",
+                headers: { 
+                    "Content-type": "application/json; charset=UTF-8"
+                },
+                body: JSON.stringify({
+                    session_id: sessionId
+                })
+            }
+        )
+    }
 }
 
 export default ChatAPI

@@ -37,6 +37,25 @@ class CreateChatAPIView(GenericAPIView):
             )
         
         try:
+            _ = Session.objects.get(session_id=session_id)
+        except Session.DoesNotExist:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Phiên không tồn tại"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Lỗi Database"
+                }, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+        try:
             chat_position = Chat.objects.filter(session_id=session_id).count() + 1
         except Chat.DoesNotExist:
             chat_position = 1
@@ -95,9 +114,28 @@ class GetChatAPIView(GenericAPIView):
             return Response(
                 {
                     "success": False,
-                    "message": "Mã trò chuyện không hợp lệ"
+                    "message": "Mã phiên không hợp lệ"
                 }, 
                 status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            _ = Session.objects.get(session_id=session_id)
+        except Session.DoesNotExist:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Phiên không tồn tại"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Lỗi Database"
+                }, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
         try:
@@ -127,6 +165,68 @@ class GetChatAPIView(GenericAPIView):
                         for chat in chat_instances.iterator()
                     ]
                 }
+            }, 
+            status=status.HTTP_200_OK
+        )
+    
+class DeleteChatAPIView(GenericAPIView):
+    def post(self, request):
+        data = request.data
+        try:
+            session_id = data['session_id']
+        except:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Thông tin trò chuyện không hợp lệ"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not session_id:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Mã phiên không hợp lệ"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            _ = Session.objects.get(session_id=session_id)
+        except Session.DoesNotExist:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Phiên không tồn tại"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Lỗi Database"
+                }, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+        try:
+            chat_instances = Chat.objects.filter(session_id=session_id)
+            for chat in chat_instances:
+                chat.delete()
+        except:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Lỗi Database"
+                }, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+        return Response(
+            {
+                "success": True,
+                "message": "Xóa thành công trò chuyện"
             }, 
             status=status.HTTP_200_OK
         )
