@@ -1,146 +1,275 @@
-import React, { useState, useEffect } from "react";
-import { Button, Input, Menu, Dropdown, Popconfirm, message } from "antd";
-import { MenuOutlined, UserOutlined, DownOutlined, MinusCircleOutlined, EditOutlined, FormOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from '../context/authentication.context';
-import UserAPI from "../API/user";
-import ChatAPI from "../API/chat";
-import SessionAPI from "../API/session";
+import React, { useState, useEffect } from "react"
+import { Button, Input, Menu, Dropdown, Popconfirm, message, Modal } from "antd"
+import { MenuOutlined, UserOutlined, DownOutlined, MinusCircleOutlined, EditOutlined, FormOutlined, TruckFilled } from "@ant-design/icons"
+import { useNavigate } from "react-router-dom"
+import { useAuth } from '../context/authentication.context'
+import UserAPI from "../API/user"
+import ChatAPI from "../API/chat"
+import SessionAPI from "../API/session"
 
-import "../assets/css/ChatPage.css";
+import "../assets/css/ChatPage.css"
+
+const MODELS = {
+    'Gemini 1.5 pro': 'gemini-1.5-pro',
+    'GPT 4.o mini': 'gpt-4.o-mini',
+    'Llama 3.2 3B instruct': 'llama-3.2-3b-instruct'
+}
+
+const PROMPTING = {
+    'Zero shot': 'zero-shot',
+    'One shot': 'one-shot',
+    'Few shot': 'few-shot',
+    'Chain-of-thought': 'chain-of-thought'
+}
 
 export default function ChatPage() {
-    const [isSidebarVisible, setSidebarVisible] = useState(true);
-    const [chatHistory, setChatHistory] = useState([]);
-    const [currentMessage, setCurrentMessage] = useState("");
-    const [currentChatIndex, setCurrentChatIndex] = useState(null);
-    const [isFirstMessageSent, setIsFirstMessageSent] = useState(false);
-    const [editingTitle, setEditingTitle] = useState(null);
-    const [newTitle, setNewTitle] = useState("");
+    const [isSidebarVisible, setSidebarVisible] = useState(true)
+    const [sessionHistory, setSessionHistory] = useState([])
+    const [chatHistory, setChatHistory] = useState([])
+    const [currentSessionId, setCurrentSessionId] = useState(null)
+    const [currentChat, setCurrentChat] = useState("")
+    const [isFirstMessageSent, setIsFirstMessageSent] = useState(false)
+    const [editingSessionId, setEditingSessionId] = useState(null)
+    const [sessionName, setSessionName] = useState("")
+    const [context, setContext] = useState("")
     const [model, setModel] = useState(null)
     const [prompt, setPrompt] = useState(null)
-    const [message, setMessage] = useState(""); // State để lưu thông báo
-    const [isSuccess, setIsSuccess] = useState(false); // State để xác định loại thông báo
-    const { username, logout , userId } = useAuth();
-    const navigate = useNavigate();
+    const [message, setMessage] = useState(null) // State để lưu thông báo
+    const [isSuccess, setIsSuccess] = useState(false) // State để xác định loại thông báo
+    const [isContextModalOpen, setIsContextModalOpen] = useState(false)
+    const { username, logout , userId } = useAuth()
+    const navigate = useNavigate()
+    const { TextArea } = Input
 
     useEffect(() => {
-        handleNewChat();
-    }, []);
+        handleLoadSessionHistory()
+    }, [])
 
-    const handleNewChat = () => {
-        SessionAPI.createSession(userId) 
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const newChat = { title: `Trò chuyện ${chatHistory.length + 1}`, messages: [], sessionId: data.data.session_id };
-                    setChatHistory([...chatHistory, newChat]);
-                    setCurrentChatIndex(chatHistory.length);
-                    setIsFirstMessageSent(false);
-                } else {
-                    message.error(data.message);
-                }
-            })
-            .catch(error => {
-                message.error("Lỗi khi tạo phiên: " + error.message);
-            });
-    };
+    useEffect(() => {
+        setCurrentSessionId(sessionHistory[0]?.sessionId)
+    }, [sessionHistory])
 
+    useEffect(() => {
+        handleLoadChatHistory()
+    }, [currentSessionId])
+
+    useEffect(() => {
+        console.log(chatHistory)
+    }, [sessionHistory])
+
+    useEffect(() => {
+        if (message) {
+            const messageTimeout = setTimeout(() => {
+                setMessage(null)
+            }, 2000)
     
-    const deleteChat = (index) => {
-        const currentChat = chatHistory[index];
-    
-        SessionAPI.deleteSession(currentChat.sessionId)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const updatedChatHistory = chatHistory.filter((_, i) => i !== index);
-                    setChatHistory(updatedChatHistory);
-                    if (updatedChatHistory.length > 0) {
-                        setCurrentChatIndex(0);
-                    } else {
-                        setCurrentChatIndex(null);
-                    }
-                } else {
-                    message.error(data.message); 
-                }
-            })
-            .catch(error => {
-                message.error("Lỗi khi xóa đoạn chat: " + error.message);
-            });
-    };
-
-
-    const handleSendMessage = () => {
-        if (currentMessage.trim()) {
-            const currentChat = chatHistory[currentChatIndex];
-            
-            ChatAPI.createChat(currentChat.sessionId, currentMessage)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        currentChat.messages.push(currentMessage);
-                        currentChat.messages.push(data.data.bot_answer);
-                        setChatHistory([...chatHistory]);
-                        setCurrentMessage("");
-                        setIsFirstMessageSent(true);
-                    } else {
-                        message.error(data.message); 
-                    }
-                })
-                .catch(error => {
-                    message.error("Lỗi khi gửi tin nhắn: " + error.message);
-                });
+            return () => clearTimeout(messageTimeout)
         }
-    };
+    }, [message])
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth < 768 && isFirstMessageSent) {
+                document.querySelector(".chat-area").classList.add("with-first-message")
+            } else {
+                document.querySelector(".chat-area").classList.remove("with-first-message")
+            }
+        }
+
+        window.addEventListener("resize", handleResize)
+
+        handleResize()
+
+        return () => window.removeEventListener("resize", handleResize)
+    }, [isFirstMessageSent])
+
+    const handleLoadSessionHistory = () => {
+        SessionAPI.getSession(userId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const sessions = data?.data?.sessions
+                if (sessions) {
+                    setSessionHistory(() => {
+                        let updatedSessionHistory = []
+                        sessions.forEach(session => {
+                            updatedSessionHistory.push({
+                                sessionId: session?.session_id,
+                                sessionName: session?.session_name,
+                                context: session?.context,
+                                updatedAt: session?.updated_at
+                            })
+                        })
+                        return updatedSessionHistory
+                    })
+                }
+
+                if (sessions.length === 0) {
+                    setIsContextModalOpen(true)
+                }
+            } else {
+                setMessage("Lỗi khi truy xuất phiên: " + data.message)
+                setIsSuccess(false)
+            }
+        })
+        .catch(error => {
+            setMessage("Lỗi khi truy xuất phiên: " + error.message)
+            setIsSuccess(false)
+        })
+    }
+
+    const handleLoadChatHistory = () => {
+        if (!currentSessionId) return
+        ChatAPI.getChat(currentSessionId)
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                const chats = data?.data?.chats
+                if (chats) {
+                    setChatHistory(chats.map(chat => ({
+                        sessionId: chat.session_id,
+                        chatId: chat.chat_id,
+                        model: chat.model,
+                        prompting: chat.prompting,
+                        chatPosition: chat.chat_position,
+                        userAsk: chat.user_ask,
+                        botAnswer: chat.bot_answer
+                    })))
+                } else {
+                    setMessage("Lỗi khi truy xuất trò chuyện: " + data.message)
+                    setIsSuccess(false)
+                }
+            }
+        })
+        .catch(error => {
+            setMessage("Lỗi khi truy xuất trò chuyện: " + error.message)
+            setIsSuccess(false)
+        })
+    }
+
+    const handleCreateSession = () => {
+        SessionAPI.createSession(userId, sessionName, context) 
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                handleLoadSessionHistory()
+                setIsFirstMessageSent(false)
+            } else {
+                setMessage("Lỗi khi tạo phiên: " + data.message)
+                setIsSuccess(false)
+            }
+        })
+        .catch(error => {
+            setMessage("Lỗi khi tạo phiên: " + error.message)
+            setIsSuccess(false)
+        })
+        .finally(() => setIsContextModalOpen(false))
+    }
+
+    
+    const deleteSession = (sessionId) => {
+        SessionAPI.deleteSession(sessionId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                handleLoadSessionHistory()
+                setMessage("Xóa phiên trò chuyện thành công")
+                setIsSuccess(true)
+            } else {
+                setMessage("Lỗi khi xóa phiên: " + data.message)
+                setIsSuccess(false)
+            }
+        })
+        .catch(error => {
+            setMessage("Lỗi khi xóa phiên: " + error.message)
+            setIsSuccess(false)
+        })
+    }
+
+
+    const handleCreateChat = () => {
+        if (currentChat.trim()) {   
+            ChatAPI.createChat(currentSessionId, MODELS[model], PROMPTING[prompt], currentChat.trim())
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+                if (data.success) {
+                    handleLoadChatHistory()
+                    setCurrentChat("")
+                    setIsFirstMessageSent(true)
+                } else {
+                    setMessage("Lỗi khi tạo trò chuyện: " + data.message)
+                    setIsSuccess(false)
+                }
+            })
+            .catch(error => {
+                setMessage("Lỗi khi tạo trò chyện: " + error.message)
+                setIsSuccess(false)
+            })
+        }
+    }
     
 
     const handleKeyDown = (e) => {
         if (e.key === "Enter") {
-            handleSendMessage();
+            handleCreateChat()
         }
-    };
+    }
 
-    const selectChat = (index) => {
-        setCurrentChatIndex(index);
-    };
+    const selectSession = (sessionId) => {
+        setCurrentSessionId(sessionId)
+    }
     
-    const handleEditTitle = (index) => {
-        setEditingTitle(index);
-        setNewTitle(chatHistory[index].title);
-    };
+    const handleEditSessionName = (sessionId) => {
+        setEditingSessionId(sessionId)
+    }
 
-    const handleSaveTitle = (index) => {
-        const updatedChatHistory = [...chatHistory];
-        updatedChatHistory[index].title = newTitle;
-        setChatHistory(updatedChatHistory);
-        setEditingTitle(null);
-        setNewTitle("");
-    };
+    const handleSaveSessionName = (sessionId) => {
+        if (!sessionName) return
+        SessionAPI.updateSessionName(sessionId, sessionName)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                setMessage(data.message)
+                setIsSuccess(true)
+                handleLoadSessionHistory()
+            } else {
+                setMessage("Lỗi khi cập nhật tên phiên: " + data.message)
+                setIsSuccess(false)
+            }
+        })
+        .catch(error => {
+            setMessage("Lỗi khi cập nhật tên phiên: " + error.message)
+            setIsSuccess(false)
+        })
 
+        setEditingSessionId(null)
+        setSessionName("")
+    }
 
     const handleLogout = () => {
         UserAPI.logout(userId) 
             .then((response) => response.json())
             .then((data) => {
                 if (data.success) {
-                    setMessage(data.message); // Hiển thị thông báo thành công
-                    setIsSuccess(true);
+                    setMessage(data.message) // Hiển thị thông báo thành công
+                    setIsSuccess(true)
                     setTimeout(() => {
-                        setMessage(data.message); 
+                        setMessage(data.message) 
                         logout() // ================
-                        navigate("/login"); 
-                    }, 1500);
+                        navigate("/login") 
+                    }, 1500)
                 } else {
-                    setMessage(data.message);
-                    setIsSuccess(false);
+                    setMessage(data.message)
+                    setIsSuccess(false)
                 }
             })
             .catch((e) => {
-                setMessage("Lỗi: " + e.message);
-                setIsSuccess(false);
-            });
-    };
+                setMessage("Lỗi: " + e.message)
+                setIsSuccess(false)
+            })
+    }
+
     const accountMenu = (
         <Menu>
             <Menu.Item key="1">
@@ -154,87 +283,75 @@ export default function ChatPage() {
                 Đăng xuất
             </Menu.Item>
         </Menu>
-    );
+    )
 
     const modelMenu = (
         <Menu>
-            <Menu.Item key="1" primary onClick={() => setModel('Mô hình 1')}>
-                Mô hình 1
+            <Menu.Item key="1" primary onClick={() => setModel('Gemini 1.5 pro')}>
+                Gemini 1.5 pro
             </Menu.Item>
-            <Menu.Item key="2" primary onClick={() => setModel('Mô hình 2')}>
-                Mô hình 2
+            <Menu.Item key="2" primary onClick={() => setModel('GPT 4.o mini')}>
+                GPT 4.o mini
             </Menu.Item>
-            <Menu.Item key="3" primary onClick={() => setModel('Mô hình 3')}>
-                Mô hình 3
+            <Menu.Item key="3" primary onClick={() => setModel('Llama 3.2 3B instruct')}>
+                Llama 3.2 3B instruct
             </Menu.Item>
         </Menu>
-    );
+    )
     const promptingMenu = (
         <Menu>
-            <Menu.Item key="1" primary onClick={() => setPrompt('Zero Shot')}>
+            <Menu.Item key="1" primary onClick={() => setPrompt('Zero shot')}>
                 Zero Shot
             </Menu.Item>
-            <Menu.Item key="2" primary onClick={() => setPrompt('One Shot')}>
+            <Menu.Item key="2" primary onClick={() => setPrompt('One shot')}>
                 One Shot
             </Menu.Item>
-            <Menu.Item key="3" primary onClick={() => setPrompt('Few Shot')}>
+            <Menu.Item key="3" primary onClick={() => setPrompt('Few shot')}>
                 Few Shot
             </Menu.Item>
-            <Menu.Item key="3" primary onClick={() => setPrompt('Chain-of-thoughts')}>
-                Chain-of-thoughts
+            <Menu.Item key="4" primary onClick={() => setPrompt('Chain-of-thought')}>
+                Chain-of-thought
             </Menu.Item>
         </Menu>
-    );
-
-    useEffect(() => {
-        const handleResize = () => {
-            if (window.innerWidth < 768 && isFirstMessageSent) {
-                document.querySelector(".chat-area").classList.add("with-first-message");
-            } else {
-                document.querySelector(".chat-area").classList.remove("with-first-message");
-            }
-        };
-
-        window.addEventListener("resize", handleResize);
-
-        handleResize();
-
-        return () => window.removeEventListener("resize", handleResize);
-    }, [isFirstMessageSent]);
+    )
 
     return (
         <div className="chat-page">
             {isSidebarVisible && (
                 <div className="sidebar">
-                    <div className="his-chat">Lịch sử trò chuyện</div>
+                    <div key={'his-chat'} className="his-chat">Lịch sử trò chuyện</div>
                     <div className="chat-history">
-                        {chatHistory.map((chat, index) => (
-                            <div key={index} className={`chat-title ${currentChatIndex === index ? "selected" : ""}`}>
-                                {editingTitle === index ? (
-                                    <Input
-                                        value={newTitle}
-                                        onChange={(e) => setNewTitle(e.target.value)}
-                                        onBlur={() => handleSaveTitle(index)}
-                                        autoFocus
-                                    />
-                                ) : (
-                                    <span className="chat-title-text" onClick={() => selectChat(index)}>
-                                        {chat.title}
-                                    </span>
-                                )}
-                                <div className="chat-actions">
-                                    <Popconfirm
-                                        title="Bạn có chắc muốn xóa trò chuyện này?"
-                                        onConfirm={() => deleteChat(index)}
-                                        okText="Xóa"
-                                        cancelText="Hủy"
-                                    >
-                                        <Button type="link" danger><MinusCircleOutlined /></Button>
-                                    </Popconfirm>
-                                    <Button type="link" onClick={() => handleEditTitle(index)}><EditOutlined /></Button>
+                        {
+                            sessionHistory.map(session => (
+                                <div key={session?.sessionId} className={`chat-title ${currentSessionId === session?.sessionId ? "selected" : ""}`}>
+                                    {
+                                        editingSessionId === session?.sessionId ? (
+                                            <Input
+                                                value={sessionName}
+                                                onChange={(e) => setSessionName(e.target.value)}
+                                                onBlur={() => handleSaveSessionName(session?.sessionId)}
+                                                autoFocus
+                                            />
+                                        ) : (
+                                            <span className="chat-title-text" onClick={() => selectSession(session?.sessionId)}>
+                                                {session?.sessionName}
+                                            </span>
+                                        )
+                                    }
+                                    <div className="chat-actions">
+                                        <Popconfirm
+                                            title="Bạn có chắc muốn xóa trò chuyện này?"
+                                            onConfirm={() => deleteSession(session?.sessionId)}
+                                            okText="Xóa"
+                                            cancelText="Hủy"
+                                        >
+                                            <Button type="link" danger><MinusCircleOutlined /></Button>
+                                        </Popconfirm>
+                                        <Button type="link" onClick={() => handleEditSessionName(session?.sessionId)}><EditOutlined /></Button>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))
+                        }
                     </div>
                 </div>
             )}
@@ -250,7 +367,7 @@ export default function ChatPage() {
                         <Button
                             className="new-chat"
                             icon={<FormOutlined />}
-                            onClick={handleNewChat}
+                            onClick={() => setIsContextModalOpen(true)}
                         >
                         </Button>
                     </div>
@@ -285,28 +402,76 @@ export default function ChatPage() {
                 )}
 
                 <div className="chat-area">
-                    {currentChatIndex !== null &&
-                        chatHistory[currentChatIndex] &&
-                        chatHistory[currentChatIndex].messages.map((message, index) => (
-                            <div className="chat-message" key={index}>
-                                {message}
-                            </div>
-                        ))}
+                    {
+                        currentSessionId &&
+                        <div className="session-context">
+                            {
+                                sessionHistory.filter(session => session?.sessionId === currentSessionId)[0]?.context
+                            }
+                        </div>
+                    }
+                    {
+                        currentSessionId &&
+                        chatHistory.filter(chat => chat?.sessionId === currentSessionId).map(chat => {
+                            return (
+                                <>
+                                    <div className="chat-message user-ask" key={"user-ask: " + chat.chatId}>
+                                        {chat.userAsk}
+                                    </div>
+                                    <div className="chat-message bot-answer" key={"bot-answer: " + chat.chatId}>
+                                        {chat.botAnswer}
+                                    </div>
+                                </>
+                            )
+                        })
+                    }
                 </div>
 
                 <div className="chat-input-area">
                     <Input
-                        value={currentMessage}
-                        onChange={(e) => setCurrentMessage(e.target.value)}
+                        value={currentChat}
+                        onChange={(e) => setCurrentChat(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Nhập tin nhắn"
                         rows={1}
                     />
-                    <Button type="primary" onClick={handleSendMessage}>
+                    <Button type="primary" onClick={handleCreateChat}>
                         Gửi
                     </Button>
                 </div>
             </div>
+
+            <Modal
+                className="context-modal"
+                open={isContextModalOpen}
+                title="Tạo cuộc trò chuyện mới"
+                onCancel={() => {
+                    setSessionName(null)
+                    setContext(null)
+                    setIsContextModalOpen(false)
+                }}
+                footer={() => (
+                <>
+                    <Button type="primary" onClick={handleCreateSession}>
+                        Tạo
+                    </Button>
+                </>
+                )}
+            >
+                <Input 
+                    className="input-session-name"
+                    value={sessionName}
+                    onChange={(e) => setSessionName(e.target.value)}
+                    placeholder="Nhập tên cuộc trò chuyện"
+                />
+                <TextArea 
+                    className="input-session-context"
+                    value={context}
+                    onChange={(e) => setContext(e.target.value)}
+                    placeholder="Nhập đoạn thông tin bạn muốn đặt câu hỏi. Đoạn thông tin dài tối đa 4000 ký tự"
+                    rows={20}
+                />
+            </Modal>
         </div>
-    );
+    )
 }

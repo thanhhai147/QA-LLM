@@ -1,8 +1,10 @@
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
+from django.utils import timezone
 from rest_framework import status
 from ..models.session import Session
 from ..models.chat import Chat
+from ..AI.QALLM import infer
 
 class CreateChatAPIView(GenericAPIView):
     def post(self, request):
@@ -10,6 +12,8 @@ class CreateChatAPIView(GenericAPIView):
         try:
             session_id = data['session_id']
             user_ask = data['user_ask']
+            model = data['model']
+            prompting = data['prompting']
         except:
             return Response(
                 {
@@ -32,6 +36,24 @@ class CreateChatAPIView(GenericAPIView):
                 {
                     "success": False,
                     "message": "Câu hỏi không hợp lệ"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if not model:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Mô hình không hợp lệ"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if not prompting:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Prompting không hợp lệ"
                 }, 
                 status=status.HTTP_400_BAD_REQUEST
             )
@@ -68,11 +90,13 @@ class CreateChatAPIView(GenericAPIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
-        bot_answer = ""
         try:
             session_instance = Session.objects.get(session_id=session_id)
-            chat_instance = Chat(session_id=session_instance, chat_position=chat_position, user_ask=user_ask, bot_answer=bot_answer)
+            bot_answer = infer(source=model, technique_prompt=prompting, context=session_instance.context, question=user_ask)
+            chat_instance = Chat(session_id=session_instance, model=model, prompting=prompting, chat_position=chat_position, user_ask=user_ask, bot_answer=bot_answer)
             chat_instance.save()
+            session_instance.updated_at = timezone.now()
+            session_instance.save()
         except:
             return Response(
                 {
@@ -90,6 +114,8 @@ class CreateChatAPIView(GenericAPIView):
                     "chat_id": chat_instance.chat_id,
                     "session_id": session_id,
                     "chat_position": chat_position,
+                    "model": model,
+                    "prompting": prompting,
                     "user_ask": user_ask,
                     "bot_answer": bot_answer
                 }
@@ -154,16 +180,21 @@ class GetChatAPIView(GenericAPIView):
                 "success": True,
                 "message": "Lấy thành công trò chuyện",
                 "data": {
-                    "chat": [
-                        {
-                            "chat_id": chat.chat_id,
-                            "session_id": chat.session_id.session_id,
-                            "chat_position": chat.chat_position,
-                            "user_ask": chat.user_ask,
-                            "bot_answer": chat.bot_answer
-                        }
-                        for chat in chat_instances.iterator()
-                    ]
+                    "chats": sorted(
+                        [
+                            {
+                                "chat_id": chat.chat_id,
+                                "session_id": chat.session_id.session_id,
+                                "model": chat.model,
+                                "prompting": chat.prompting,
+                                "chat_position": chat.chat_position,
+                                "user_ask": chat.user_ask,
+                                "bot_answer": chat.bot_answer
+                            }
+                            for chat in chat_instances.iterator()
+                        ],
+                        key=lambda chat: chat['chat_position'], reverse=False
+                    )
                 }
             }, 
             status=status.HTTP_200_OK

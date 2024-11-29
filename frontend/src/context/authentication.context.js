@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { setCookie, getCookie } from "../utils/cookies.util"
+import { setCookie, getCookie, deleteCookie } from "../utils/cookies.util"
 
 const AuthContext = createContext(null);
 
@@ -20,6 +20,9 @@ export const AuthProvider = ({ children }) => {
   };
   const logout = () => {
     setUsername(null)
+    setUserId(null)
+    deleteCookie('user_id')
+    deleteCookie('username')
     setIsAuthenticated(false);
   }
 

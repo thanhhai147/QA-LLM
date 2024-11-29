@@ -4,6 +4,7 @@ from rest_framework import status
 from ..models.user import User
 from ..validators.custom_validators import AdancedValidator
 from django.utils import timezone
+from django.contrib.auth.hashers import make_password, check_password
 
 class SignupAPIView(GenericAPIView):
     def post(self, request):
@@ -51,7 +52,8 @@ class SignupAPIView(GenericAPIView):
             )
         
         try:
-            instance = User(user_name=user_name, password=password)
+            hashed_password = make_password(password)
+            instance = User(user_name=user_name, password=hashed_password)
             instance.save()
         except:
             return Response(
@@ -108,8 +110,7 @@ class LoginAPIView(GenericAPIView):
         
         try:
             instance = User.objects.get(user_name=user_name)
-
-            if instance.password != password:
+            if not check_password(password, instance.password):
                 return Response(
                     {
                         "success": False,

@@ -28,7 +28,6 @@
 }
 
 .chat-message {
-    background: rgba(185, 217, 241, 0.4);
     margin-bottom: 15px;
     padding: 15px;
     border-radius: 15px;
@@ -41,10 +40,20 @@
     word-wrap: break-word; /* Đảm bảo từ dài sẽ xuống dòng */
     word-break: break-word; /* Hỗ trợ xuống dòng cho các từ dài */
     white-space: pre-wrap; /* Giữ nguyên khoảng trắng và xuống dòng theo nội dung */
+}
+
+.user-ask {
+    background-color: rgba(42, 122, 233, 0.326);
     margin-right: 27%;
     margin-left: auto;
     transition: bottom 0.3s ease, margin-left 0.3s ease;
+}
 
+.bot-answer {
+    background-color: #6fbeff;
+    margin-right: auto;
+    margin-left: 27%;
+    transition: bottom 0.3s ease, margin-right 0.3s ease;
 }
 .main-content.no-sidebar .chat-message {
     margin-right: 30%;
@@ -187,3 +196,16 @@
     font-size: 23px;
 }
 
+.input-session-name {
+    margin-bottom: 10px
+}
+
+.session-context {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #d9d9d9;
+    color: #c5c5c5;
+    font-style: italic;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.02);
+    margin-bottom: 20px;
+}

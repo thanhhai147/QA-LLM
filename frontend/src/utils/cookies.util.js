@@ -16,4 +16,9 @@ function getCookie(name) {
     return null;
 }
 
-export {setCookie, getCookie}
+function deleteCookie(name) {
+    document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+}
+
+
+export {setCookie, getCookie, deleteCookie}

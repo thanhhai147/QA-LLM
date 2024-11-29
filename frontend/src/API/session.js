@@ -1,5 +1,5 @@
 class SessionAPI {
-    static createSession(userId) {
+    static createSession(userId, sessionName, context) {
         return fetch(
             `http://localhost:8000/create-session`, 
             {
@@ -9,7 +9,9 @@ class SessionAPI {
                     "Content-type": "application/json; charset=UTF-8"
                 },
                 body: JSON.stringify({
-                    user_id: userId
+                    user_id: userId,
+                    session_name: sessionName,
+                    context: context
                 })
             }
         )
@@ -36,6 +38,23 @@ class SessionAPI {
                 },
                 body: JSON.stringify({
                     session_id: sessionId
+                })
+            }
+        )
+    }
+
+    static updateSessionName(sessionId, sessionName) {
+        return fetch(
+            `http://localhost:8000/update-session-name`, 
+            {
+                method: "POST",
+                mode: "cors",
+                headers: { 
+                    "Content-type": "application/json; charset=UTF-8"
+                },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    session_name: sessionName
                 })
             }
         )

@@ -8,14 +8,14 @@ class UserAdmin(admin.ModelAdmin):
     search_fields = ['user_id', 'user_name']
 
 class SessionAdmin(admin.ModelAdmin):
-    list_display = ('session_id', 'user_id', 'created_at', 'updated_at')
+    list_display = ('session_id', 'user_id', 'context', 'created_at', 'updated_at')
     list_filter = ['created_at', 'updated_at']
-    search_fields = ['session_id', 'user_id']
+    search_fields = ['session_id', 'user_id', 'context']
 
 class ChatAdmin(admin.ModelAdmin):
-    list_display = ('chat_id', 'session_id', 'chat_position', 'user_ask', 'bot_answer', 'created_at', 'updated_at')
+    list_display = ('chat_id', 'session_id', 'model', 'prompting', 'chat_position', 'user_ask', 'bot_answer', 'created_at', 'updated_at')
     list_filter = ['created_at', 'updated_at']
-    search_fields = ['chat_id', 'session_id', 'chat_position', 'user_ask', 'bot_answer']
+    search_fields = ['chat_id', 'session_id', 'model', 'prompting', 'chat_position', 'user_ask', 'bot_answer']
 
 admin.site.register(user.User, UserAdmin)
 admin.site.register(session.Session, SessionAdmin)
