@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { Button, Input, Menu, Dropdown, Popconfirm, message, Modal } from "antd"
+import { Button, Input, Menu, Dropdown, Popconfirm, message, Modal, Spin } from "antd"
 import { MenuOutlined, UserOutlined, DownOutlined, MinusCircleOutlined, EditOutlined, FormOutlined, TruckFilled } from "@ant-design/icons"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from '../context/authentication.context'
@@ -37,6 +37,7 @@ export default function ChatPage() {
     const [message, setMessage] = useState(null) // State để lưu thông báo
     const [isSuccess, setIsSuccess] = useState(false) // State để xác định loại thông báo
     const [isContextModalOpen, setIsContextModalOpen] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
     const { username, logout , userId } = useAuth()
     const navigate = useNavigate()
     const { TextArea } = Input
@@ -52,10 +53,6 @@ export default function ChatPage() {
     useEffect(() => {
         handleLoadChatHistory()
     }, [currentSessionId])
-
-    useEffect(() => {
-        console.log(chatHistory)
-    }, [sessionHistory])
 
     useEffect(() => {
         if (message) {
@@ -84,6 +81,7 @@ export default function ChatPage() {
     }, [isFirstMessageSent])
 
     const handleLoadSessionHistory = () => {
+        setIsLoading(true)
         SessionAPI.getSession(userId)
         .then(response => response.json())
         .then(data => {
@@ -116,10 +114,14 @@ export default function ChatPage() {
             setMessage("Lỗi khi truy xuất phiên: " + error.message)
             setIsSuccess(false)
         })
+        .finally(() => {
+            setIsLoading(false)
+        })
     }
 
     const handleLoadChatHistory = () => {
         if (!currentSessionId) return
+        setIsLoading(true)
         ChatAPI.getChat(currentSessionId)
         .then(response => response.json())
         .then(data => {
@@ -145,9 +147,13 @@ export default function ChatPage() {
             setMessage("Lỗi khi truy xuất trò chuyện: " + error.message)
             setIsSuccess(false)
         })
+        .finally(() => {
+            setIsLoading(false)
+        })
     }
 
     const handleCreateSession = () => {
+        setIsLoading(true)
         SessionAPI.createSession(userId, sessionName, context) 
         .then(response => response.json())
         .then(data => {
@@ -163,11 +169,15 @@ export default function ChatPage() {
             setMessage("Lỗi khi tạo phiên: " + error.message)
             setIsSuccess(false)
         })
-        .finally(() => setIsContextModalOpen(false))
+        .finally(() => {
+            setIsContextModalOpen(false)
+            setIsLoading(false)
+        })
     }
 
     
     const deleteSession = (sessionId) => {
+        setIsLoading(true)
         SessionAPI.deleteSession(sessionId)
         .then(response => response.json())
         .then(data => {
@@ -184,11 +194,15 @@ export default function ChatPage() {
             setMessage("Lỗi khi xóa phiên: " + error.message)
             setIsSuccess(false)
         })
+        .finally(() => {
+            setIsLoading(false)
+        })
     }
 
 
     const handleCreateChat = () => {
         if (currentChat.trim()) {   
+            setIsLoading(true)
             ChatAPI.createChat(currentSessionId, MODELS[model], PROMPTING[prompt], currentChat.trim())
             .then(response => response.json())
             .then(data => {
@@ -205,6 +219,9 @@ export default function ChatPage() {
             .catch(error => {
                 setMessage("Lỗi khi tạo trò chyện: " + error.message)
                 setIsSuccess(false)
+            })
+            .finally(() => {
+                setIsLoading(false)
             })
         }
     }
@@ -226,6 +243,7 @@ export default function ChatPage() {
 
     const handleSaveSessionName = (sessionId) => {
         if (!sessionName) return
+        setIsLoading(true)
         SessionAPI.updateSessionName(sessionId, sessionName)
         .then(response => response.json())
         .then(data => {
@@ -242,32 +260,38 @@ export default function ChatPage() {
             setMessage("Lỗi khi cập nhật tên phiên: " + error.message)
             setIsSuccess(false)
         })
-
-        setEditingSessionId(null)
-        setSessionName("")
+        .finally(() => {
+            setEditingSessionId(null)
+            setSessionName("")
+            setIsLoading(false)
+        })
     }
 
     const handleLogout = () => {
+        setIsLoading(true)
         UserAPI.logout(userId) 
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.success) {
-                    setMessage(data.message) // Hiển thị thông báo thành công
-                    setIsSuccess(true)
-                    setTimeout(() => {
-                        setMessage(data.message) 
-                        logout() // ================
-                        navigate("/login") 
-                    }, 1500)
-                } else {
-                    setMessage(data.message)
-                    setIsSuccess(false)
-                }
-            })
-            .catch((e) => {
-                setMessage("Lỗi: " + e.message)
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                setMessage(data.message) // Hiển thị thông báo thành công
+                setIsSuccess(true)
+                setTimeout(() => {
+                    setMessage(data.message) 
+                    logout() // ================
+                    navigate("/login") 
+                }, 1500)
+            } else {
+                setMessage(data.message)
                 setIsSuccess(false)
-            })
+            }
+        })
+        .catch((e) => {
+            setMessage("Lỗi: " + e.message)
+            setIsSuccess(false)
+        })
+        .finally(() => {
+            setIsLoading(false)
+        })
     }
 
     const accountMenu = (
@@ -331,6 +355,7 @@ export default function ChatPage() {
                                                 onChange={(e) => setSessionName(e.target.value)}
                                                 onBlur={() => handleSaveSessionName(session?.sessionId)}
                                                 autoFocus
+                                                disabled={isLoading}
                                             />
                                         ) : (
                                             <span className="chat-title-text" onClick={() => selectSession(session?.sessionId)}>
@@ -344,10 +369,11 @@ export default function ChatPage() {
                                             onConfirm={() => deleteSession(session?.sessionId)}
                                             okText="Xóa"
                                             cancelText="Hủy"
+                                            disabled={isLoading}
                                         >
                                             <Button type="link" danger><MinusCircleOutlined /></Button>
                                         </Popconfirm>
-                                        <Button type="link" onClick={() => handleEditSessionName(session?.sessionId)}><EditOutlined /></Button>
+                                        <Button type="link" disabled={isLoading} onClick={() => handleEditSessionName(session?.sessionId)}><EditOutlined /></Button>
                                     </div>
                                 </div>
                             ))
@@ -363,11 +389,13 @@ export default function ChatPage() {
                             className="toggle-sidebar"
                             icon={<MenuOutlined />}
                             onClick={() => setSidebarVisible(!isSidebarVisible)}
+                            disabled={isLoading}
                         />
                         <Button
                             className="new-chat"
                             icon={<FormOutlined />}
                             onClick={() => setIsContextModalOpen(true)}
+                            disabled={isLoading}
                         >
                         </Button>
                     </div>
@@ -375,19 +403,26 @@ export default function ChatPage() {
                     <div className="header-center">
                         <Dropdown 
                             overlay={modelMenu}
+                            disabled={isLoading}
                         >
                             <Button className="select-model">
                                 {model ? model : "Chọn mô hình"} <DownOutlined />
                             </Button>
                         </Dropdown>
-                        <Dropdown overlay={promptingMenu}>
+                        <Dropdown 
+                            overlay={promptingMenu}
+                            disabled={isLoading}
+                        >
                             <Button className="select-prompting">
                                 {prompt ? prompt : "Chọn cách prompting"} <DownOutlined />
                             </Button>
                         </Dropdown>
                     </div>
 
-                        <Dropdown overlay={accountMenu}>
+                        <Dropdown 
+                            overlay={accountMenu}
+                            disabled={isLoading}
+                        >
                             <Button className="account-info" icon={<UserOutlined />}>
                                 {username} <DownOutlined />
                             </Button>
@@ -434,8 +469,9 @@ export default function ChatPage() {
                         onKeyDown={handleKeyDown}
                         placeholder="Nhập tin nhắn"
                         rows={1}
+                        disabled={isLoading}
                     />
-                    <Button type="primary" onClick={handleCreateChat}>
+                    <Button type="primary" disabled={isLoading} onClick={handleCreateChat}>
                         Gửi
                     </Button>
                 </div>
@@ -452,7 +488,7 @@ export default function ChatPage() {
                 }}
                 footer={() => (
                 <>
-                    <Button type="primary" onClick={handleCreateSession}>
+                    <Button type="primary" disabled={isLoading} onClick={handleCreateSession}>
                         Tạo
                     </Button>
                 </>
@@ -463,6 +499,7 @@ export default function ChatPage() {
                     value={sessionName}
                     onChange={(e) => setSessionName(e.target.value)}
                     placeholder="Nhập tên cuộc trò chuyện"
+                    disabled={isLoading}
                 />
                 <TextArea 
                     className="input-session-context"
@@ -470,8 +507,17 @@ export default function ChatPage() {
                     onChange={(e) => setContext(e.target.value)}
                     placeholder="Nhập đoạn thông tin bạn muốn đặt câu hỏi. Đoạn thông tin dài tối đa 4000 ký tự"
                     rows={20}
+                    disabled={isLoading}
                 />
             </Modal>
+
+            {
+                isLoading ?
+                <div className="spin-container"> 
+                    <Spin size="large" />
+                </div> 
+                : null
+            }
         </div>
     )
 }
